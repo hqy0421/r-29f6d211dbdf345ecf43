@@ -1,6 +1,8 @@
 # Changelog
 
 ## [Unreleased]
+### Added
+- [alembic] Optional planner (`MaterializedViewRefreshPlan`) for rebuilding multi-layer ``TO`` materialized views around a target-table structure change. It computes the full affected view closure from old/new dependency graphs, validates missing dependencies and cycles, and renders deterministic upgrade/downgrade migrations that preserve table data and unrelated views.
 
 ## [0.3.2] - 2024-06-12
 ### Added

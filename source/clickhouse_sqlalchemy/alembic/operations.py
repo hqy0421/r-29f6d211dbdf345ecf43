@@ -110,6 +110,40 @@ class DropMatViewOp(MigrateOperation):
         )
 
 
+@Operations.register_operation('refresh_mat_views')
+class RefreshMatViewsOp(MigrateOperation):
+    """Container operation for a materialized view rebuild plan.
+
+    The plan itself is produced by
+    :class:`clickhouse_sqlalchemy.alembic.mvplan.MaterializedViewRefreshPlan`.
+    This operation only carries the plan; the renderer expands it into plain
+    drop/create/execute operations, so execution and autogenerate behavior
+    stay unchanged for every other operation.
+    """
+
+    def __init__(self, plan):
+        self.plan = plan
+
+    @classmethod
+    def refresh_mat_views(cls, operations, plan):
+        """Issue a planned rebuild of a set of TO materialized views."""
+        op = RefreshMatViewsOp(plan)
+        return operations.invoke(op)
+
+    def reverse(self):
+        # Rendered migrations use the explicitly rendered downgrade steps;
+        # reverse() is provided for API completeness.
+        return RefreshMatViewsReverseOp(self.plan)
+
+
+class RefreshMatViewsReverseOp(MigrateOperation):
+    def __init__(self, plan):
+        self.plan = plan
+
+    def reverse(self):
+        return RefreshMatViewsOp(self.plan)
+
+
 @Operations.register_operation('attach_mat_view')
 class AttachMatViewOp(MigrateOperation):
     def __init__(self, name, selectable, engine, *columns, **kwargs):

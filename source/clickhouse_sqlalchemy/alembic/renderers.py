@@ -106,6 +106,26 @@ def render_attach_mat_view(autogen_context, op):
     )
 
 
+@renderers.dispatch_for(operations.RefreshMatViewsOp)
+def render_refresh_mat_views(autogen_context, op):
+    return _render_refresh_steps(autogen_context, op.plan.upgrade_ops())
+
+
+@renderers.dispatch_for(operations.RefreshMatViewsReverseOp)
+def render_refresh_mat_views_reverse(autogen_context, op):
+    return _render_refresh_steps(autogen_context, op.plan.downgrade_ops())
+
+
+def _render_refresh_steps(autogen_context, planned_ops):
+    # Every planned step wraps an already registered primitive operation, so
+    # rendering reuses the standard drop/create/execute renderers and emits
+    # only plain, executable migration statements.
+    lines = []
+    for planned in planned_ops:
+        lines.extend(render.render_op(autogen_context, planned.alembic_op))
+    return '\n'.join(lines)
+
+
 @renderers.dispatch_for(operations.DetachMatViewOp)
 def render_detach_mat_view(autogen_context, op):
     return (
